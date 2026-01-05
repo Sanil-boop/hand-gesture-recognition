@@ -4,10 +4,12 @@ import numpy as np
 import cv2
 import json
 # Support both environments
+# Use tflite-runtime on Render | TensorFlow locally
 try:
     import tflite_runtime.interpreter as tflite
 except ImportError:
     from tensorflow import lite as tflite
+
 
 
 IMG_SIZE = 64
