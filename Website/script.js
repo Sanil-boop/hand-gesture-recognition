@@ -1,5 +1,12 @@
-const API = "http://127.0.0.1:5000/predict";
+// ================= API URL =================
+// LOCAL TESTING
+// const API = "http://127.0.0.1:5000/predict";
 
+// RENDER DEPLOYED API
+const API = "https://hand-gesture-recognition-3.onrender.com/predict";
+
+
+// ================= ICON MAP =================
 const GESTURE_ICONS = {
   palm: "🖐",
   fist: "✊",
@@ -10,82 +17,143 @@ const GESTURE_ICONS = {
   blank: "❔"
 };
 
+
+// ================= DOM ELEMENTS =================
 const historyList = document.getElementById("historyList");
 const preview = document.getElementById("preview");
+const resultCard = document.getElementById("result-card");
+const gestureIcon = document.getElementById("gestureIcon");
+const predictionText = document.getElementById("predictionText");
+const confidenceBar = document.getElementById("confidenceBar");
+const confidenceText = document.getElementById("confidenceText");
 
-document.getElementById("upload").addEventListener("change", function() {
-  preview.src = URL.createObjectURL(this.files[0]);
+
+// ================= IMAGE PREVIEW =================
+document.getElementById("upload").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  preview.src = URL.createObjectURL(file);
   preview.style.display = "block";
 });
 
 
-// ---------- IMAGE PREDICTION ----------
+// ================= PREDICT IMAGE =================
 async function predictGesture() {
 
   const file = document.getElementById("upload").files[0];
-  if (!file) return alert("Upload an image first");
+  if (!file) return alert("⚠ Please upload an image first");
 
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch(API, { method: "POST", body: formData });
-  const data = await res.json();
+  showProcessing("Processing image…");
 
-  showResult(data.prediction, data.confidence);
+  try {
+    const res = await fetch(API, { method: "POST", body: formData });
+    const data = await res.json();
+
+    showResult(data.prediction, data.confidence);
+
+  } catch (err) {
+    showError("API unreachable — try again or restart backend");
+  }
 }
 
 
-// ---------- DISPLAY RESULT ----------
+// ================= SHOW RESULT =================
 function showResult(label, conf) {
 
   const confidence = Math.round(conf * 100);
   const icon = GESTURE_ICONS[label] || "🤖";
 
-  document.getElementById("result-card").style.display = "block";
-  document.getElementById("gestureIcon").innerHTML = icon;
-  document.getElementById("predictionText").innerHTML =
-    `Prediction: <b>${label.toUpperCase()}</b>`;
+  resultCard.style.display = "block";
+  gestureIcon.innerHTML = icon;
 
-  document.getElementById("confidenceBar").style.width = confidence + "%";
-  document.getElementById("confidenceText").innerHTML =
-    `Confidence: ${confidence}%`;
+  predictionText.innerHTML = `Prediction: <b>${label.toUpperCase()}</b>`;
+  confidenceBar.style.width = confidence + "%";
+  confidenceText.innerHTML = `Confidence: ${confidence}%`;
 
+  // --- Save to History (top insert, max 5 entries)
   const li = document.createElement("li");
   li.innerHTML = `${icon} ${label} — ${confidence}%`;
+
   historyList.prepend(li);
+
+  if (historyList.childElementCount > 5) {
+    historyList.removeChild(historyList.lastChild);
+  }
 }
 
 
-// ---------- WEBCAM MODE ----------
+// ================= STATUS MESSAGES =================
+function showProcessing(msg) {
+  resultCard.style.display = "block";
+  gestureIcon.innerHTML = "⚙️";
+  predictionText.innerHTML = msg;
+  confidenceBar.style.width = "0%";
+  confidenceText.innerHTML = "";
+}
+
+function showError(msg) {
+  resultCard.style.display = "block";
+  gestureIcon.innerHTML = "❌";
+  predictionText.innerHTML = msg;
+  confidenceBar.style.width = "0%";
+  confidenceText.innerHTML = "";
+}
+
+
+// ================= WEBCAM MODE =================
 let cam = document.getElementById("cam");
 let canvas = document.getElementById("frameGrab");
+
 let camActive = false;
 let stream;
+let livePredictRunning = false;
+
 
 async function toggleWebcam() {
 
   if (camActive) {
-    stream.getTracks().forEach(t => t.stop());
-    cam.style.display = "none";
-    camActive = false;
+    stopWebcam();
     return;
   }
 
-  stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  cam.srcObject = stream;
-  cam.style.display = "block";
-  camActive = true;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
 
-  startLivePrediction();
+    cam.srcObject = stream;
+    cam.style.display = "block";
+    camActive = true;
+
+    startLivePrediction();
+
+  } catch {
+    alert("Camera permission required");
+  }
 }
 
 
-// ---------- LIVE FRAME PREDICTION ----------
+function stopWebcam() {
+  stream.getTracks().forEach(t => t.stop());
+  cam.style.display = "none";
+  camActive = false;
+  livePredictRunning = false;
+}
+
+
+// ================= LIVE PREDICTION =================
 async function startLivePrediction() {
+
+  if (livePredictRunning) return;
+  livePredictRunning = true;
 
   const ctx = canvas.getContext("2d");
 
-  setInterval(async () => {
+  showProcessing("Live mode: Detecting…");
+
+  const loop = async () => {
 
     if (!camActive) return;
 
@@ -94,16 +162,25 @@ async function startLivePrediction() {
 
     ctx.drawImage(cam, 0, 0, 64, 64);
 
-    canvas.toBlob(async blob => {
+    const blob = await new Promise(resolve =>
+      canvas.toBlob(resolve, "image/jpeg")
+    );
 
-      const formData = new FormData();
-      formData.append("file", blob, "frame.jpg");
+    const formData = new FormData();
+    formData.append("file", blob, "frame.jpg");
 
+    try {
       const res = await fetch(API, { method: "POST", body: formData });
       const data = await res.json();
 
       showResult(data.prediction, data.confidence);
-    });
 
-  }, 900);
+    } catch {
+      showError("Live stream connection lost");
+    }
+
+    setTimeout(loop, 800); // throttle 1 frame / 0.8s
+  };
+
+  loop();
 }

@@ -1,8 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Hand Gesture Recognition</title>
+  <meta charset="UTF-8" />
+  <title>Hand Gesture Recognition — Gesture AI</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
@@ -19,52 +23,69 @@
   </ul>
 </header>
 
+
 <section class="hero">
 
   <div class="card">
 
     <h1>Hand Gesture Recognition</h1>
+
     <p class="subtitle">
       Upload an image or use your webcam to recognize gestures in real-time
     </p>
 
-    <!-- Upload Mode -->
+
+    <!-- ===== Upload Mode ===== -->
     <div class="upload-box">
       <input type="file" id="upload" accept="image/*">
-      <button onclick="predictGesture()">Predict Gesture</button>
+
+      <button onclick="predictGesture()">
+        Predict Gesture
+      </button>
     </div>
 
+
+    <!-- Image Preview -->
     <img id="preview" class="preview-img" style="display:none;">
 
 
-    <!-- Webcam Mode -->
-    <button class="webcam-btn" onclick="toggleWebcam()">🎥 Start Webcam</button>
+    <!-- ===== Webcam Mode ===== -->
+    <button class="webcam-btn" onclick="toggleWebcam()">
+      🎥 Start Webcam
+    </button>
 
-    <video id="cam" autoplay class="preview-img" style="display:none;"></video>
+    <video id="cam" autoplay muted playsinline class="preview-img" style="display:none;"></video>
     <canvas id="frameGrab" style="display:none;"></canvas>
 
 
-    <!-- Result Card -->
+    <!-- ===== Result Card ===== -->
     <div id="result-card" class="result-card" style="display:none;">
+
       <div class="gesture-icon" id="gestureIcon">🤖</div>
 
-      <h2 id="predictionText"></h2>
+      <h2 id="predictionText">Waiting for input…</h2>
 
       <div class="confidence-wrapper">
         <div id="confidenceBar" class="confidence-bar"></div>
       </div>
 
-      <p id="confidenceText"></p>
+      <p id="confidenceText">Confidence: —</p>
     </div>
 
 
+    <!-- ===== Prediction History ===== -->
     <h3>Prediction History</h3>
-    <ul id="historyList" class="history"></ul>
+
+    <ul id="historyList" class="history">
+      <!-- history appears here -->
+    </ul>
 
   </div>
 
 </section>
 
+
 <script src="script.js"></script>
+
 </body>
 </html>
