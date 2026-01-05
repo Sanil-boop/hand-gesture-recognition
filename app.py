@@ -3,7 +3,8 @@ from flask_cors import CORS
 import numpy as np
 import cv2
 import json
-import tensorflow.lite as tflite
+import tflite_runtime.interpreter as tflite
+
 
 IMG_SIZE = 64
 
