@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hand Gesture Recognition</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="navbar">
+  <div class="logo">🤖 Gesture AI</div>
+
+  <ul class="nav-links">
+    <li class="active">Home</li>
+    <li>Demo</li>
+    <li>Dataset</li>
+    <li>Documentation</li>
+    <li>About</li>
+  </ul>
+</header>
+
+<section class="hero">
+
+  <div class="card">
+
+    <h1>Hand Gesture Recognition</h1>
+    <p class="subtitle">
+      Upload an image or use your webcam to recognize gestures in real-time
+    </p>
+
+    <!-- Upload Mode -->
+    <div class="upload-box">
+      <input type="file" id="upload" accept="image/*">
+      <button onclick="predictGesture()">Predict Gesture</button>
+    </div>
+
+    <img id="preview" class="preview-img" style="display:none;">
+
+
+    <!-- Webcam Mode -->
+    <button class="webcam-btn" onclick="toggleWebcam()">🎥 Start Webcam</button>
+
+    <video id="cam" autoplay class="preview-img" style="display:none;"></video>
+    <canvas id="frameGrab" style="display:none;"></canvas>
+
+
+    <!-- Result Card -->
+    <div id="result-card" class="result-card" style="display:none;">
+      <div class="gesture-icon" id="gestureIcon">🤖</div>
+
+      <h2 id="predictionText"></h2>
+
+      <div class="confidence-wrapper">
+        <div id="confidenceBar" class="confidence-bar"></div>
+      </div>
+
+      <p id="confidenceText"></p>
+    </div>
+
+
+    <h3>Prediction History</h3>
+    <ul id="historyList" class="history"></ul>
+
+  </div>
+
+</section>
+
+<script src="script.js"></script>
+</body>
+</html>
